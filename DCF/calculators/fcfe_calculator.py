@@ -9,42 +9,47 @@ class FCFECalculator:
         self.financial_collector = FinancialDataCollector(ticker_symbol)
 
     def calculate_fcfe(self, period: str = "annual") -> Dict[str, float]:
-        """FCFE를 계산하는 메서드"""
+        """FCFE를 계산하는 메서드
+        Args:
+            period (str): 기간 (annual, quarterly)
+        Returns:
+            Dict[str, float]: FCFE 계산 결과
+            
+            FCFE (float): Free Cash Flow to Equity 
+                : 주주들이 실질적으로 가질 수 있는 현금흐름.
+                : 회사가 번 돈에서 필요한 비용을 빼고 남은 돈(주주에게 돌아갈 수 있는 돈)
+
+            Operating Cash Flow (float): 영업활동현금흐름
+                : 회사가 영업을 통해 얼마나 많은 현금을 벌었는지 나타냄
+            Capital Expenditure (float): 자본지출
+                : 회사가 자산을 구매하거나 유지하기 위해 사용한 현금
+            Repayment of Debt (float): 부채상환(-)
+                : 부채를 상환하면 현금이 줄어듦
+            Issuance of Debt (float): 부채발행(+)
+                : 부채를 발행하면 현금이 증가함
+        """
         try:
             # 재무 지표 수집
             metrics = self.financial_collector.extract_financial_metrics(period)
-
-            # 가장 최근 데이터와 이전 데이터 선택 (첫 번째, 두 번째 열)
-            current_metrics = {}
-            previous_metrics = {}
-            
-            for key in metrics:
-                if not metrics[key].empty:
-                    current_metrics[key] = metrics[key].iloc[0]
-                    previous_metrics[key] = metrics[key].iloc[1] if len(metrics[key]) > 1 else 0.0
-                else:
-                    current_metrics[key] = 0.0
-                    previous_metrics[key] = 0.0
             
             # FCFE 계산
-            fcfe = (current_metrics['operating_cash_flow'] 
-                    - current_metrics['capital_expenditure'] 
-                    + current_metrics['repayment_of_debt'] # (-) 부채상환
-                    + current_metrics['issuance_of_debt']) # (+) 부채발행
+            fcfe = (metrics['operating_cash_flow'].iloc[0] 
+                    - metrics['capital_expenditure'].iloc[0] 
+                    + metrics['repayment_of_debt'].iloc[0] # (-) 부채상환
+                    + metrics['issuance_of_debt'].iloc[0]) # (+) 부채발행
             
-            # 결과 딕셔너리 생성 (float로 변환)
             results = {
                 'FCFE': float(fcfe),
-                'Operating Cash Flow': float(current_metrics['operating_cash_flow']),
-                'Capital Expenditure': float(current_metrics['capital_expenditure']),
-                'Repayment of Debt': float(current_metrics['repayment_of_debt']),
-                'Issuance of Debt': float(current_metrics['issuance_of_debt']),
+                'Operating Cash Flow': float(metrics['operating_cash_flow'].iloc[0]),
+                'Capital Expenditure': float(metrics['capital_expenditure'].iloc[0]),
+                'Repayment of Debt': float(metrics['repayment_of_debt'].iloc[0]),
+                'Issuance of Debt': float(metrics['issuance_of_debt'].iloc[0]),
             }
             
-            # 출력
-            print("\nFCFE:")
-            for key, value in results.items():
-                print(f"{key}: {value:,.0f}")  # .0f로 변경하여 소수점 없애기
+            # # 출력
+            # print("\nFCFE:")
+            # for key, value in results.items():
+            #     print(f"{key}: {value:,.0f}")  # .0f로 변경하여 소수점 없애기
             
             return results
             

@@ -4,44 +4,55 @@ import pandas as pd
 from ..collectors.info_data_collector import InfoDataCollector
 
 class GrowthCalculatorShareholder:
-    """성장률을 계산하는 클래스"""
+    """순이익 성장률을 계산하는 클래스"""
     
     def __init__(self, ticker_symbol: str):
         self.ticker_symbol = ticker_symbol
         self.financial_collector = FinancialDataCollector(ticker_symbol)
         self.info_collector = InfoDataCollector(ticker_symbol)
 
-    def calculate_growth_rate(self, period: str = "annual") -> Dict[str,float]:
-        """성장률 계산 (순이익 성장률 = 유보율(1-배당률) * ROE(Net Income / Equity))"""
+    def calculate_net_income_growth_rate(self, period: str = "annual") -> Dict[str,float]:
+        """순이익 성장률 계산 (순이익 성장률 = 유보율(1-배당률) * ROE(Net Income / Equity))
+        
+        Args:
+            period (str): 기간 (annual, quarterly)
+        Returns:
+            Dict[str, float]: 성장률 계산 결과
+
+            Growth Rate (float): 순이익 성장률
+            Retention Ratio (float): 유보율
+                    : 순이익에서 배당금을 제외하고 투자를 위해 남긴 돈
+                ROE (float): 자기자본수익률
+                    : 주주가 투자한 돈으로 얼마나 효율적으로 이익을 냈는지 보여주는 지표.
+        """
         try:
             # 재무 지표 수집
             metrics = self.financial_collector.extract_financial_metrics(period)
             info = self.info_collector.get_info()
 
             # 성장률 계산
+            # TODO: 3년 평균으로 계산(유보율, roe 전부), 만약 roe 0보다 작으면 DCF 계산 불가처리
             retention_ratio = 1 - info['payout_ratio']
             roe = metrics['net_income'].iloc[0] / metrics['total_equity'].iloc[0]
 
-            print(f"retention_ratio: {retention_ratio}")
-            print(f"net_income: {metrics['net_income'].iloc[0]}")
-            print(f"total_equity: {metrics['total_equity'].iloc[0]}")
+            # print(f"retention_ratio: {retention_ratio}")
+            # print(f"net_income: {metrics['net_income'].iloc[0]}")
+            # print(f"total_equity: {metrics['total_equity'].iloc[0]}")
 
             growth_rate = retention_ratio * roe
             
             results = {
                 'Growth Rate': growth_rate,
-                'Components': {
-                    'Retention Ratio': retention_ratio,
-                    'ROE': roe,
-                }
+                'Retention Ratio': retention_ratio,
+                'ROE': roe,
             }
             
             # 결과 출력
             print("\n성장률 계산 결과:")
-            print(f"성장률: {growth_rate:.2%}")
-            print("\n구성 요소:")
-            for key, value in results['Components'].items():
-                print(f"{key}: {value:,.2f}")
+            print(f"순이익 성장률: {growth_rate:.2%}")
+            # print("\n구성 요소:")
+            # for key, value in results['Components'].items():
+            #     print(f"{key}: {value:,.2f}")
             
             return results
             
