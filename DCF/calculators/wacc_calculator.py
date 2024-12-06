@@ -27,6 +27,7 @@ class WACCCalculator:
             
             # 자본비용 계산
             cost_of_equity = self._calculate_cost_of_equity()
+            print(f"\nCost of Equity: {cost_of_equity:.2%}\n")
             
             # 부채비용 계산
             cost_of_debt = self._calculate_cost_of_debt(metrics)
@@ -50,11 +51,11 @@ class WACCCalculator:
                 'Effective Tax Rate': self.effective_tax_rate
             }
             
-            for key, value in results.items():
-                if key == 'Beta':
-                    print(f"{key}: {value:.2f}")
-                else:
-                    print(f"{key}: {value:.2%}")
+            # for key, value in results.items():
+            #     if key == 'Beta':
+            #         print(f"{key}: {value:.2f}")
+            #     else:
+            #         print(f"{key}: {value:.2%}")
             
             return results
             
@@ -117,11 +118,12 @@ class WACCCalculator:
             pretax_income = metrics['pretax_income']
             income_tax = metrics['tax_provision']
             
-            if pretax_income == 0:
-                return 0.22
+            # if pretax_income == 0:
+            #     return 0.22
             
             effective_tax_rate = income_tax / pretax_income
-            
+            print(f"실효세율: {effective_tax_rate:.2%}")
+
             if not (0 <= effective_tax_rate <= 1):
                 return 0.22
                 

@@ -30,14 +30,19 @@ class GrowthCalculatorShareholder:
             metrics = self.financial_collector.extract_financial_metrics(period)
             info = self.info_collector.get_info()
 
-            # ROE 3년 평균 계산
-            roe_values = []
-            for i in range(min(3, len(metrics))):
-                current_roe = metrics['net_income'].iloc[i] / metrics['total_equity'].iloc[i]
-                roe_values.append(current_roe)
+            # ROE 4년 평균 계산
+            # roe_values = []
+            # for i in range(min(4, len(metrics))):
+            #     current_roe = metrics['net_income'].iloc[i] / metrics['total_equity'].iloc[i]
+            #     roe_values.append(current_roe)
             
-            roe = sum(roe_values) / len(roe_values)
+            # roe = sum(roe_values) / len(roe_values)
+
+            # 최근 년도의 ROE 계산
+            roe = metrics['net_income'].iloc[0] / metrics['total_equity'].iloc[0]
             
+            # print(f"ROE 4년 평균: {roe}")
+
             # ROE가 음수인 경우 예외 발생
             if roe <= 0:
                 raise ValueError("ROE가 0보다 작거나 같습니다. DCF 계산이 불가능합니다.")
@@ -52,8 +57,8 @@ class GrowthCalculatorShareholder:
             }
             
             # 결과 출력
-            print("\n성장률 계산 결과:")
-            print(f"순이익 성장률: {growth_rate:.2%}")
+            # print("\n성장률 계산 결과:")
+            print(f"Growth Rate: {growth_rate:.2%}\n")
             # print("\n구성 요소:")
             # for key, value in results['Components'].items():
             #     print(f"{key}: {value:,.2f}")

@@ -32,14 +32,32 @@ class FCFECalculator:
             # 재무 지표 수집
             metrics = self.financial_collector.extract_financial_metrics(period)
             
-            # FCFE 계산
-            fcfe = (metrics['operating_cash_flow'].iloc[0] 
-                    - metrics['capital_expenditure'].iloc[0] 
-                    + metrics['repayment_of_debt'].iloc[0] # (-) 부채상환
-                    + metrics['issuance_of_debt'].iloc[0]) # (+) 부채발행
+            # FCFE 4년 평균으로 변경
+            # fcfe_values = []
+            # for i in range(4):
+            #     fcfe = (metrics['operating_cash_flow'].iloc[i] 
+            #             - metrics['capital_expenditure'].iloc[i] 
+            #             + metrics['repayment_of_debt'].iloc[i]
+            #             + metrics['issuance_of_debt'].iloc[i]) # 버핏 방식에서는 제외
+            #     fcfe_values.append(fcfe)
+            
+            # fcfe_average = sum(fcfe_values) / len(fcfe_values)  # 4년 평균
+
+            # 최근 년도의 FCFE 계산
+            fcfe_average = (metrics['operating_cash_flow'].iloc[0] 
+                            - metrics['capital_expenditure'].iloc[0] 
+                            + metrics['repayment_of_debt'].iloc[0]
+                            + metrics['issuance_of_debt'].iloc[0]) # 버핏 방식에서는 제외
+            
+            ratio_capex_ocf = metrics['capital_expenditure'].iloc[0] / metrics['operating_cash_flow'].iloc[0]
+            ratio_repayment_issuance = -metrics['repayment_of_debt'].iloc[0] / metrics['issuance_of_debt'].iloc[0]
+            
+            # print(f"FCFE 4년 평균: {fcfe_average}")
+            print(f"Capital Expenditure / Operating Cash Flow: {ratio_capex_ocf:.2%}")
+            print(f"부채상환 / 부채발행: {ratio_repayment_issuance:.2%}")
             
             results = {
-                'FCFE': float(fcfe),
+                'FCFE': float(fcfe_average),
                 'Operating Cash Flow': float(metrics['operating_cash_flow'].iloc[0]),
                 'Capital Expenditure': float(metrics['capital_expenditure'].iloc[0]),
                 'Repayment of Debt': float(metrics['repayment_of_debt'].iloc[0]),
