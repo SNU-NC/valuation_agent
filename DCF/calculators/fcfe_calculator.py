@@ -8,10 +8,11 @@ class FCFECalculator:
         self.ticker_symbol = ticker_symbol
         self.financial_collector = FinancialDataCollector(ticker_symbol)
 
-    def calculate_fcfe(self, period: str = "annual") -> Dict[str, float]:
+    def calculate_fcfe(self, period: str = "annual", years: int = 1) -> Dict[str, float]:
         """FCFE를 계산하는 메서드
         Args:
             period (str): 기간 (annual, quarterly)
+            years (int): 평균을 계산할 연도 수
         Returns:
             Dict[str, float]: FCFE 계산 결과
             
@@ -32,29 +33,30 @@ class FCFECalculator:
             # 재무 지표 수집
             metrics = self.financial_collector.extract_financial_metrics(period)
             
-            # FCFE 4년 평균으로 변경
-            # fcfe_values = []
-            # for i in range(4):
-            #     fcfe = (metrics['operating_cash_flow'].iloc[i] 
-            #             - metrics['capital_expenditure'].iloc[i] 
-            #             + metrics['repayment_of_debt'].iloc[i]
-            #             + metrics['issuance_of_debt'].iloc[i]) # 버핏 방식에서는 제외
-            #     fcfe_values.append(fcfe)
+            # n년 평균 FCFE 계산
+            fcfe_values = []
+            for i in range(min(years, len(metrics['operating_cash_flow']))):
+                fcfe = (metrics['operating_cash_flow'].iloc[i] 
+                        - metrics['capital_expenditure'].iloc[i] 
+                        + metrics['repayment_of_debt'].iloc[i]
+                        + metrics['issuance_of_debt'].iloc[i])
+                fcfe_values.append(fcfe)
             
-            # fcfe_average = sum(fcfe_values) / len(fcfe_values)  # 4년 평균
+            fcfe_average = sum(fcfe_values) / len(fcfe_values)
+            
+            ratio_capex_ocf_values = []
+            ratio_repayment_issuance_values = []
+            for i in range(min(years, len(metrics['capital_expenditure']))):
+                ratio_capex_ocf = metrics['capital_expenditure'].iloc[i] / metrics['operating_cash_flow'].iloc[i]
+                ratio_repayment_issuance = -metrics['repayment_of_debt'].iloc[i] / metrics['issuance_of_debt'].iloc[i]
+                ratio_capex_ocf_values.append(ratio_capex_ocf)
+                ratio_repayment_issuance_values.append(ratio_repayment_issuance)
+            
+            ratio_capex_ocf = sum(ratio_capex_ocf_values) / len(ratio_capex_ocf_values)
+            ratio_repayment_issuance = sum(ratio_repayment_issuance_values) / len(ratio_repayment_issuance_values)
 
-            # 최근 년도의 FCFE 계산
-            fcfe_average = (metrics['operating_cash_flow'].iloc[0] 
-                            - metrics['capital_expenditure'].iloc[0] 
-                            + metrics['repayment_of_debt'].iloc[0]
-                            + metrics['issuance_of_debt'].iloc[0]) # 버핏 방식에서는 제외
-            
-            ratio_capex_ocf = metrics['capital_expenditure'].iloc[0] / metrics['operating_cash_flow'].iloc[0]
-            ratio_repayment_issuance = -metrics['repayment_of_debt'].iloc[0] / metrics['issuance_of_debt'].iloc[0]
-            
-            # print(f"FCFE 4년 평균: {fcfe_average}")
-            print(f"Capital Expenditure / Operating Cash Flow: {ratio_capex_ocf:.2%}")
-            print(f"부채상환 / 부채발행: {ratio_repayment_issuance:.2%}")
+            # print(f"Capital Expenditure / Operating Cash Flow: {ratio_capex_ocf:.2%}")
+            # print(f"부채상환 / 부채발행: {ratio_repayment_issuance:.2%}")
             
             results = {
                 'FCFE': float(fcfe_average),
@@ -62,12 +64,9 @@ class FCFECalculator:
                 'Capital Expenditure': float(metrics['capital_expenditure'].iloc[0]),
                 'Repayment of Debt': float(metrics['repayment_of_debt'].iloc[0]),
                 'Issuance of Debt': float(metrics['issuance_of_debt'].iloc[0]),
+                'Ratio CapEx/OCF': float(ratio_capex_ocf),
+                'Ratio Repayment/Issuance': float(ratio_repayment_issuance)
             }
-            
-            # # 출력
-            # print("\nFCFE:")
-            # for key, value in results.items():
-            #     print(f"{key}: {value:,.0f}")  # .0f로 변경하여 소수점 없애기
             
             return results
             
@@ -76,9 +75,9 @@ class FCFECalculator:
             return None
 
 # 편의를 위한 함수형 인터페이스
-def calculate_fcfe(ticker_symbol: str, period: str = "annual") -> Dict[str, float]:
+def calculate_fcfe(ticker_symbol: str, period: str = "annual", years: int = 1) -> Dict[str, float]:
     calculator = FCFECalculator(ticker_symbol)
-    return calculator.calculate_fcfe(period)
+    return calculator.calculate_fcfe(period, years)
 
 if __name__ == "__main__":
     # 삼성전자의 FCFF 계산

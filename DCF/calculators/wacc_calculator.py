@@ -27,7 +27,6 @@ class WACCCalculator:
             
             # 자본비용 계산
             cost_of_equity = self._calculate_cost_of_equity()
-            print(f"\nCost of Equity: {cost_of_equity:.2%}\n")
             
             # 부채비용 계산
             cost_of_debt = self._calculate_cost_of_debt(metrics)

@@ -11,11 +11,12 @@ class GrowthCalculatorShareholder:
         self.financial_collector = FinancialDataCollector(ticker_symbol)
         self.info_collector = InfoDataCollector(ticker_symbol)
 
-    def calculate_net_income_growth_rate(self, period: str = "annual") -> Dict[str,float]:
+    def calculate_net_income_growth_rate(self, period: str = "annual", years: int = 1) -> Dict[str,float]:
         """순이익 성장률 계산 (순이익 성장률 = 유보율(1-배당률) * ROE(Net Income / Equity))
         
         Args:
             period (str): 기간 (annual, quarterly)
+            years (int): 평균을 계산할 연도 수
         Returns:
             Dict[str, float]: 성장률 계산 결과
 
@@ -29,24 +30,18 @@ class GrowthCalculatorShareholder:
             # 재무 지표 수집
             metrics = self.financial_collector.extract_financial_metrics(period)
             info = self.info_collector.get_info()
-
-            # ROE 4년 평균 계산
-            # roe_values = []
-            # for i in range(min(4, len(metrics))):
-            #     current_roe = metrics['net_income'].iloc[i] / metrics['total_equity'].iloc[i]
-            #     roe_values.append(current_roe)
             
-            # roe = sum(roe_values) / len(roe_values)
-
-            # 최근 년도의 ROE 계산
-            roe = metrics['net_income'].iloc[0] / metrics['total_equity'].iloc[0]
+            # n년 평균 ROE 계산
+            roe_values = []
+            for i in range(min(years, len(metrics['net_income']))):
+                current_roe = metrics['net_income'].iloc[i] / metrics['total_equity'].iloc[i]
+                roe_values.append(current_roe)
             
-            # print(f"ROE 4년 평균: {roe}")
-
-            # ROE가 음수인 경우 예외 발생
+            roe = sum(roe_values) / len(roe_values)
+            
             if roe <= 0:
                 raise ValueError("ROE가 0보다 작거나 같습니다. DCF 계산이 불가능합니다.")
-
+            
             retention_ratio = 1 - info['payout_ratio']
             growth_rate = retention_ratio * roe
             
@@ -54,15 +49,7 @@ class GrowthCalculatorShareholder:
                 'Growth Rate': growth_rate,
                 'Retention Ratio': retention_ratio,
                 'ROE': roe,
-            }
-            
-            # 결과 출력
-            # print("\n성장률 계산 결과:")
-            print(f"Growth Rate: {growth_rate:.2%}\n")
-            # print("\n구성 요소:")
-            # for key, value in results['Components'].items():
-            #     print(f"{key}: {value:,.2f}")
-            
+            }            
             return results
             
         except Exception as e:
