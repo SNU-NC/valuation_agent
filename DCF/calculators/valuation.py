@@ -44,14 +44,18 @@ class ValuationCalculator:
         fcfe = calculated_fcfe['FCFE']
         net_income_growth_rate = calculated_net_income_growth_rate['Growth Rate']
         wacc = calculated_wacc['WACC']
-        net_income = metrics['net_income'].iloc[0]
+        retention_ratio = calculated_net_income_growth_rate['Retention Ratio']
+
+        # 3년 평균 순이익 계산
+        net_income_values = metrics['net_income'].iloc[:min(3, len(metrics))]
+        net_income = net_income_values.mean()
 
         _1year_fcfe = fcfe
         
-        _2year_fcfe = _1year_fcfe + net_income * (1 + net_income_growth_rate)
-        _3year_fcfe = _2year_fcfe + net_income * (1 + net_income_growth_rate) ** 2 
-        _4year_fcfe = _3year_fcfe + net_income * (1 + net_income_growth_rate) ** 3
-        _5year_fcfe = _4year_fcfe + net_income * (1 + net_income_growth_rate) ** 4
+        _2year_fcfe = _1year_fcfe + net_income * ((1 + net_income_growth_rate) ** 1) * retention_ratio
+        _3year_fcfe = _2year_fcfe + net_income * ((1 + net_income_growth_rate) ** 2) * retention_ratio
+        _4year_fcfe = _3year_fcfe + net_income * ((1 + net_income_growth_rate) ** 3) * retention_ratio
+        _5year_fcfe = _4year_fcfe + net_income * ((1 + net_income_growth_rate) ** 4) * retention_ratio
 
         self._5year_fcfe = _5year_fcfe
 
@@ -100,7 +104,8 @@ class ValuationCalculator:
         """총가치 계산"""
         _5year_pv = self.calculate_5year_present_value(period)
         terminal_value, fcfe, wacc, net_income_growth_rate, growth_rate_tv = self.calculate_terminal_value(period)
-        total_value = _5year_pv + terminal_value
+        terminal_value_pv = terminal_value / ((1 + wacc) ** 5)
+        total_value = _5year_pv + terminal_value_pv
         print(f"Total Value: {total_value}")
         return total_value, fcfe, wacc, net_income_growth_rate, growth_rate_tv
     
