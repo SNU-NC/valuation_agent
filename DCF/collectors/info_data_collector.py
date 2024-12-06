@@ -26,16 +26,19 @@ class InfoDataCollector:
         try:
             metrics['payout_ratio'] = info['payoutRatio']
         except KeyError:
-            print("payoutRatio 데이터를 찾을 수 없습니다.")
+            metrics['payout_ratio'] = 0
+            print("payoutRatio 데이터를 찾을 수 없습니다. 배당이 없던 것으로 간주하여, payout_ratio = 0으로 대체합니다.")
 
         try:
             metrics['regularMarketPreviousClose'] = info['regularMarketPreviousClose']
         except KeyError:
+            metrics['regularMarketPreviousClose'] = 0
             print("regularMarketPreviousClose 데이터를 찾을 수 없습니다.")
 
         try:
             metrics['shares_outstanding'] = info['sharesOutstanding']
         except KeyError:
+            metrics['shares_outstanding'] = 1
             print("sharesOutstanding 데이터를 찾을 수 없습니다.")
         
         return metrics
