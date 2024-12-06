@@ -18,14 +18,14 @@ class ValuationCalculator:
         self.shares_outstanding = self.info_collector.get_info()['shares_outstanding']
         #print(f"Shares Outstanding: {self.shares_outstanding}")
     
-    def calculate_5year_present_value(
-            self, period: str = "annual", 
+    def calculate_10year_present_value(
+            self,
             fcfe: float = None, 
             cost_of_equity: float = None,
             net_income_growth_rate: float = None,
             retention_ratio: float = None
             ) -> float:
-        """향후 5년 주주가치의 현재가치 계산
+        """향후 10년 주주가치의 현재가치 계산
         
         Args:
             period (str): 기간 (annual, quarterly)
@@ -45,11 +45,11 @@ class ValuationCalculator:
 
         
         # FCFE가 net income growth만큼 성장한다고 가정
-        after_1year_fcfe = fcfe * ((1 + net_income_growth_rate) ** 1)
-        after_2year_fcfe = after_1year_fcfe * ((1 + net_income_growth_rate) ** 2)
-        after_3year_fcfe = after_2year_fcfe * ((1 + net_income_growth_rate) ** 3)
-        after_4year_fcfe = after_3year_fcfe * ((1 + net_income_growth_rate) ** 4)
-        after_5year_fcfe = after_4year_fcfe * ((1 + net_income_growth_rate) ** 5)
+        after_fcfe = []
+        for i in range(10):
+            after_fcfe.append(fcfe * ((1 + net_income_growth_rate) ** (i+1)))
+ 
+        after_10year_fcfe = after_fcfe[9]
 
         # print(f"_1year_fcfe: {_1year_fcfe}")
         # print(f"_2year_fcfe: {_2year_fcfe}")
@@ -57,24 +57,21 @@ class ValuationCalculator:
         # print(f"_4year_fcfe: {_4year_fcfe}")
         # print(f"_5year_fcfe: {_5year_fcfe}")
 
-        after_1year_present_value = after_1year_fcfe / ((1 + cost_of_equity) ** 1)
-        after_2year_present_value = after_2year_fcfe / ((1 + cost_of_equity) ** 2)
-        after_3year_present_value = after_3year_fcfe / ((1 + cost_of_equity) ** 3)
-        after_4year_present_value = after_4year_fcfe / ((1 + cost_of_equity) ** 4)
-        after_5year_present_value = after_5year_fcfe / ((1 + cost_of_equity) ** 5)
+        after_fcfe_present_value = []
+        for i in range(10):
+            after_fcfe_present_value.append(after_fcfe[i] / ((1 + cost_of_equity) ** (i+1)))
 
-        total_present_value = after_1year_present_value + after_2year_present_value + after_3year_present_value + after_4year_present_value + after_5year_present_value
+        total_present_value = sum(after_fcfe_present_value)
 
         # print(f"Total Present Value: {total_present_value}")
 
-        return total_present_value, after_5year_fcfe
+        return total_present_value, after_10year_fcfe
         
     def calculate_terminal_value(
             self,
             cost_of_equity: float = None,
-            net_income_growth_rate: float = None,
             retention_ratio: float = None,
-            after_5year_fcfe: float = None
+            after_10year_fcfe: float = None
             ) -> Tuple[float, float, float, float, float]:
         """Terminal Value 계산
         
@@ -89,10 +86,10 @@ class ValuationCalculator:
         """
         growth_rate_tv = 0.0 # Terminal Value 계산에 사용할 성장률 0%로 고정(성숙기업 무성장 예상)
 
-        _6year_fcfe = after_5year_fcfe * (1 + growth_rate_tv) * retention_ratio
-        terminal_value = _6year_fcfe / (cost_of_equity - growth_rate_tv)
-        terminal_value_pv = terminal_value / ((1 + cost_of_equity) ** 6)
-        # print(f"_6year_fcfe: {_6year_fcfe}")
+        _11year_fcfe = after_10year_fcfe * (1 + growth_rate_tv) * retention_ratio
+        terminal_value = _11year_fcfe / (cost_of_equity - growth_rate_tv)
+        terminal_value_pv = terminal_value / ((1 + cost_of_equity) ** 10)
+        # print(f"_11year_fcfe: {_11year_fcfe}")
         # print(f"terminal_value: {terminal_value}")
         
         return terminal_value_pv, growth_rate_tv
@@ -109,10 +106,10 @@ class ValuationCalculator:
         net_income_growth_rate = calculated_net_income_growth_rate['Growth Rate']
         retention_ratio = calculated_net_income_growth_rate['Retention Ratio']
 
-        _5year_pv, after_5year_fcfe = self.calculate_5year_present_value(period, fcfe, cost_of_equity, net_income_growth_rate, retention_ratio)
-        terminal_value_pv, growth_rate_tv = self.calculate_terminal_value(cost_of_equity, net_income_growth_rate, retention_ratio, after_5year_fcfe)
+        _10year_pv, after_10year_fcfe = self.calculate_10year_present_value(fcfe, cost_of_equity, net_income_growth_rate, retention_ratio)
+        terminal_value_pv, growth_rate_tv = self.calculate_terminal_value(cost_of_equity, net_income_growth_rate, retention_ratio, after_10year_fcfe)
 
-        total_value = _5year_pv + terminal_value_pv
+        total_value = _10year_pv + terminal_value_pv
 
         # print(f"Total Value: {total_value}")
         return total_value, fcfe, cost_of_equity, net_income_growth_rate, growth_rate_tv
@@ -138,9 +135,13 @@ class ValuationCalculator:
                 calculated_growth = self._calculate_net_income_growth_rate(period, years)
                 growth_rate = calculated_growth['Growth Rate']
                 retention_ratio = calculated_growth['Retention Ratio']
+                roe = calculated_growth['ROE']
+
+                if fcfe <= 0 or roe <= 0:
+                    results[f'result_{years}year'] = None
+                    continue
                 
-                _5year_pv, after_5year_fcfe = self.calculate_5year_present_value(
-                    period=period,
+                _10year_pv, after_10year_fcfe = self.calculate_10year_present_value(
                     fcfe=fcfe,
                     cost_of_equity=cost_of_equity,
                     net_income_growth_rate=growth_rate,
@@ -149,12 +150,11 @@ class ValuationCalculator:
                 
                 terminal_value_pv, growth_rate_tv = self.calculate_terminal_value(
                     cost_of_equity=cost_of_equity,
-                    net_income_growth_rate=growth_rate,
                     retention_ratio=retention_ratio,
-                    after_5year_fcfe=after_5year_fcfe
+                    after_10year_fcfe=after_10year_fcfe
                 )
                 
-                total_value = _5year_pv + terminal_value_pv
+                total_value = _10year_pv + terminal_value_pv
                 per_share = total_value / self.shares_outstanding
                 
                 # 결과 저장
@@ -177,6 +177,12 @@ class ValuationCalculator:
             except Exception as e:
                 print(f"{years}년 평균 계산 중 오류 발생: {str(e)}")
                 continue
+
+        if best_result is None:
+            print("="*100)
+            print("기업의 최근 4년간 ROE, FCFE가 0이거나 음수인 경우, 기업의 영속성을 담보할 수 없기 때문에, DCF 계산이 불가능합니다.")
+            print("="*100)
+            return None
         
         print("="*100)
         print(f"actual_price: {actual_price}")
@@ -184,8 +190,6 @@ class ValuationCalculator:
         print("="*100)
         for key, value in best_result.items():
             print(f"{key}: {value}")
-        if best_result is None:
-            raise ValueError("적절한 계산 결과를 찾을 수 없습니다.")
             
         return best_result
     

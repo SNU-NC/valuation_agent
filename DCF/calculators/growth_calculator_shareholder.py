@@ -38,10 +38,7 @@ class GrowthCalculatorShareholder:
                 roe_values.append(current_roe)
             
             roe = sum(roe_values) / len(roe_values)
-            
-            if roe <= 0:
-                raise ValueError("ROE가 0보다 작거나 같습니다. DCF 계산이 불가능합니다.")
-            
+
             retention_ratio = 1 - info['payout_ratio']
             growth_rate = retention_ratio * roe
             

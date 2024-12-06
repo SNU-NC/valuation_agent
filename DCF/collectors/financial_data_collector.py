@@ -2,6 +2,8 @@ import yfinance as yf
 import pandas as pd
 from typing import Dict, Optional, Tuple
 
+pd.set_option('future.no_silent_downcasting', True)
+
 class FinancialDataCollector:
     """재무제표 데이터를 수집하는 클래스"""
     
@@ -123,10 +125,14 @@ class FinancialDataCollector:
         # Repayment of Debt 추출
         repayment_of_debt_keys = ['Repayment Of Debt']
         metrics['repayment_of_debt'] = self._find_metric(cash_flow, repayment_of_debt_keys, "부채상환")
-
+        if metrics['repayment_of_debt'].isna().any():
+            metrics['repayment_of_debt'] = pd.to_numeric(metrics['repayment_of_debt'].fillna(0))
+        
         # Issuance of Debt 추출
         issuance_of_debt_keys = ['Issuance Of Debt']
         metrics['issuance_of_debt'] = self._find_metric(cash_flow, issuance_of_debt_keys, "부채발행")
+        if metrics['issuance_of_debt'].isna().any():
+            metrics['issuance_of_debt'] = pd.to_numeric(metrics['issuance_of_debt'].fillna(0))
 
         return metrics
     
