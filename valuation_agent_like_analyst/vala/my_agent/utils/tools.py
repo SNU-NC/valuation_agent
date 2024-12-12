@@ -22,24 +22,37 @@ tavily_search_tool = TavilySearchResults(
     # args_schema=...,       # overwrite default args_schema: BaseModel
 )
 
+# 한글 문자 범위를 이용해 한글 포함 여부 확인
+def contains_korean(text):
+    for char in text:
+        if '\uac00' <= char <= '\ud7a3' or '\u3131' <= char <= '\u318e':
+            return True
+    return False
+
 def get_ticker(company_name):
-    try:
-        # 사전 매핑 확인
-        # if company_name in manual_mapping:
-        #     return manual_mapping[company_name]
-        
-        # 회사명을 영어로 번역
-        translated = GoogleTranslator(source='auto', target='en').translate(company_name)
-        # print(f"Translated company name: {translated}")
-        
-        # 번역된 이름으로 검색
-        results = search(translated)
-        if results is not None and 'quotes' in results and len(results['quotes']) > 0:
-            # 첫 번째 결과의 티커 반환
-            return results['quotes'][0]['symbol']
+    try:            
+        # 한글 포함 여부 확인
+        is_korean = contains_korean(company_name)
+        if is_korean:
+            # 회사명을 영어로 번역
+            translated = GoogleTranslator(source='auto', target='en').translate(company_name)
+            
+            # 번역된 이름으로 검색
+            results = search(translated)
         else:
-            print(f"No ticker found for {company_name} after translation.")
-            return None
+            results = search(company_name)
+            
+        # KSC 거래소 심볼 먼저 찾기
+        for quote in results['quotes']:
+            if quote['exchange'] == 'KSC':
+                return quote['symbol']
+        
+        # KSC가 없으면 첫 번째 심볼 반환
+        if results['quotes']:
+            return results['quotes'][0]['symbol']
+        
+        return None
+            
     except Exception as e:
         print(f"Error translating or searching for {company_name}: {e}")
         return None
@@ -63,8 +76,11 @@ def find_PER_tool(company: str) -> str:
         return None
     else:
         ticker = yf.Ticker(ticker)
-        PER = ticker.info["forwardPE"]
-        return {"PER":PER}
+        earning_ttm = 0
+        for i in range(4):
+            earning_ttm += ticker.quarterly_income_stmt.loc['Net Income Common Stockholders'][i]
+        trailingPERttm = ticker.info["marketCap"]/earning_ttm
+        return {"PER":trailingPERttm}
     
 @tool
 def find_EPS_tool(company: str) -> str:
@@ -74,8 +90,11 @@ def find_EPS_tool(company: str) -> str:
         return None
     else:
         ticker = yf.Ticker(ticker)
-        EPS = ticker.info["netIncomeToCommon"]/ticker.info["sharesOutstanding"]
-        return {"EPS":EPS}
+        earning_ttm = 0
+        for i in range(4):
+            earning_ttm += ticker.quarterly_income_stmt.loc['Net Income Common Stockholders'][i]
+        EPSttm = earning_ttm/ticker.info["sharesOutstanding"]
+        return {"EPS":EPSttm}
 
 
 # ============================== find_peer를 위한 사전 설정 시작==============================
@@ -120,7 +139,7 @@ def find_peer(company: str) -> list[str]:
 def find_peer_PERs_tool(company: str):
     """기업과 동종 업계의 Peer Group PER 평균을 찾습니다."""
     ticker = get_ticker(company)
-    peer_list = find_peer(company)
+    peer_list = find_peer(company)['answer']
     if ticker is None:
         return None
     
@@ -131,12 +150,22 @@ def find_peer_PERs_tool(company: str):
             continue
         elif ".KS" in ticker:
             ticker = yf.Ticker(ticker)
-            per = ticker.info.get("forwardPE")
-            peer_pers[peer] = per
+            earning_ttm = 0
+            for i in range(4):
+                earning_ttm += ticker.quarterly_income_stmt.loc['Net Income Common Stockholders'][i]
+            trailingPERttm = ticker.info.get("marketCap")/earning_ttm
+            if trailingPERttm <0 :
+                continue
+            peer_pers[peer] = trailingPERttm
         else:
             ticker = yf.Ticker(ticker)
-            per = ticker.info.get("forwardPE")*0.7 # 외국 주식의 경우 PER을 30% 할인
-            peer_pers[peer] = per
+            earning_ttm = 0
+            for i in range(4):
+                earning_ttm += ticker.quarterly_income_stmt.loc['Net Income Common Stockholders'][i]
+            trailingPERttm = ticker.info.get("marketCap")/earning_ttm*0.7 # 외국 주식의 경우 PER을 30% 할인
+            if trailingPERttm <0 :
+                continue
+            peer_pers[peer] = trailingPERttm
     
     average_peer_per = sum(peer_pers.values()) / len(peer_pers)
 

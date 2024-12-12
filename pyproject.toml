@@ -19,6 +19,8 @@ yahooquery = "^2.3.7"
 deep-translator = "^1.11.4"
 langchain-community = "^0.3.10"
 langgraph = "^0.2.57"
+langchain-anthropic = "^0.3.0"
+duckduckgo-search = "^6.4.1"
 
 
 [tool.poetry.group.dev.dependencies]
