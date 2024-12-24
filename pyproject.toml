@@ -22,6 +22,7 @@ langgraph = "^0.2.57"
 langchain-anthropic = "^0.3.0"
 duckduckgo-search = "^6.4.1"
 selenium = "^4.27.1"
+opendartreader = "^0.2.3"
 
 
 [tool.poetry.group.dev.dependencies]
