@@ -21,6 +21,7 @@ langchain-community = "^0.3.10"
 langgraph = "^0.2.57"
 langchain-anthropic = "^0.3.0"
 duckduckgo-search = "^6.4.1"
+selenium = "^4.27.1"
 
 
 [tool.poetry.group.dev.dependencies]
