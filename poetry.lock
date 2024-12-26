@@ -2233,6 +2233,23 @@ datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
 realtime = ["websockets (>=13,<15)"]
 
 [[package]]
+name = "opendartreader"
+version = "0.2.3"
+description = "OpenDartReader (FSS DART Open API reader)"
+optional = false
+python-versions = ">=3"
+files = [
+    {file = "OpenDartReader-0.2.3-py3-none-any.whl", hash = "sha256:710c01969e5b01dc1b7bc78a9f5f13cad11623cdb2f6ed45110f6cd40a111ecc"},
+]
+
+[package.dependencies]
+beautifulsoup4 = "*"
+lxml = "*"
+pandas = ">=0.19.2"
+requests = ">=2.3.0"
+requests-file = "*"
+
+[[package]]
 name = "openpyxl"
 version = "3.1.5"
 description = "A Python library to read/write Excel 2010 xlsx/xlsm files"
@@ -3481,6 +3498,20 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "requests-file"
+version = "2.1.0"
+description = "File transport adapter for Requests"
+optional = false
+python-versions = "*"
+files = [
+    {file = "requests_file-2.1.0-py2.py3-none-any.whl", hash = "sha256:cf270de5a4c5874e84599fc5778303d496c10ae5e870bfa378818f35d21bda5c"},
+    {file = "requests_file-2.1.0.tar.gz", hash = "sha256:0f549a3f3b0699415ac04d167e9cb39bccfb730cb832b4d20be3d9867356e658"},
+]
+
+[package.dependencies]
+requests = ">=1.0.0"
+
+[[package]]
 name = "requests-futures"
 version = "1.0.2"
 description = "Asynchronous Python HTTP for Humans."
@@ -4148,4 +4179,4 @@ repair = ["scipy (>=1.6.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ddbf99f918e49454ee82891be9db0a7c720f8cd1d5017fae186abd6486aebbe0"
+content-hash = "af906b0a2327834b9aee804659da087526b59510dbfcf8fd5235d80b247ffac2"

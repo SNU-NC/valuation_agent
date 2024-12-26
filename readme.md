@@ -5,4 +5,6 @@
     - langgraph_test.ipynb 실행.
 
 3. Analyst처럼 목표 주가 예측
-    - valuation_agent_like_analyst/valuation_agent_like_analyst.ipynb 실행.
+    - report_agent/report_agent.ipynb 실행.
+    - 11개 기업 대상 가능: 
+        SK하이닉스, 대한항공, 포스코퓨처엠, 현대자동차, 삼성전자, SK텔레콤, 두산에너빌리티, 네이버, 카카오, 넷마블, LG에너지솔루션
