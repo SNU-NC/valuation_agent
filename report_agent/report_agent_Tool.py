@@ -41,11 +41,11 @@ class ReportAgentTool(BaseTool):
             # 검색 필터 설정
             search_filter = filter_dict if filter_dict else None
 
-            # 검색 실행
-            results = self.report_agent.get_report(
+            # 리포트 작성실행
+            report = self.report_agent.get_report(
                 query=query.strip('"').strip(),
                 filter=search_filter,
             )
-            return results
+            return report
         except Exception as e:
             return f"Error: {e}"

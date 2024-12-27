@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
 class yoyPredictionOutput(BaseModel):
-    """yoy 예측값을 나타내는 모델"""
+    """yoy 예측 아웃풋"""
     business_segment: str = Field(description="사업부")
     yoy: float = Field(description="사업부 yoy 예측값")
     reason: str = Field(description="사업부 yoy 예측값의 근거")
