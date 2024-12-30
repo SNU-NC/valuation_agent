@@ -25,22 +25,16 @@ def get_ticker(company_name):
         else:
             results = search(company_name)
             
-        # KSC, NYSE, NASDAQ, AMEX, JPX, HKG 순서로 찾기
-        for quote in results['quotes']:
-            if quote['exchange'] == 'KSC': # 한국
-                return quote['symbol']
-            elif quote['exchange'] == 'NYQ': # NYSE
-                return quote['symbol']
-            elif quote['exchange'] == 'NMS': # NASDAQ
-                return quote['symbol']
-            elif quote['exchange'] == 'JPX': # 일본
-                return quote['symbol']
-            elif quote['exchange'] == 'HKG': # 홍콩
-                return quote['symbol']
-            else:
-                continue
+        # 거래소 우선순위 정의
+        priority_exchanges = ['KSC', 'NYQ', 'NMS', 'JPX', 'HKG']
         
-        # KSC, NYSE, NASDAQ, AMEX에 없으면 None 반환
+        # 각 거래소별로 순차 검색
+        for exchange in priority_exchanges:
+            for quote in results['quotes']:
+                if quote['exchange'] == exchange:
+                    return quote['symbol']
+        
+        # 해당하는 거래소가 없는 경우
         return None
     except Exception as e:
         print(f"Error translating or searching for {company_name}: {e}")
