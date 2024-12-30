@@ -52,7 +52,7 @@ class ReportAgentManager:
 
             # 2. 분기별 요약손익계산서(+사업부별매출) 가져오기
             try:
-                file_path = f"tools/analyze/report_agent/tools/data/quarterly_financial_data/{self.state.ticker}_quarterly_financial_data.xlsx"
+                file_path = f"./tools/analyze/report_agent/tools/data/quarterly_financial_data/{self.state.ticker}_quarterly_financial_data.xlsx"
                 if not os.path.exists(file_path):
                     error_msg = f"분기별 요약손익계산서 파일을 찾을 수 없습니다: {file_path}"
                     self.logger.error(error_msg)
