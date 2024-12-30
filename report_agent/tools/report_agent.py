@@ -51,9 +51,20 @@ class ReportAgentManager:
             print("===1. 회사명 및 티커 추출 완료===")
 
             # 2. 분기별 요약손익계산서(+사업부별매출) 가져오기
-            self.income_stmt_cum = pd.read_excel(f"./data/quarterly_financial_data/{self.state.ticker}_quarterly_financial_data.xlsx",header=0)
-            self.segments = extract_segment(self.income_stmt_cum)
-            print("===2. 분기별 요약손익계산서 및 사업부별 매출액 추출 완료===")
+            try:
+                file_path = f"tools/analyze/report_agent/tools/data/quarterly_financial_data/{self.state.ticker}_quarterly_financial_data.xlsx"
+                if not os.path.exists(file_path):
+                    error_msg = f"분기별 요약손익계산서 파일을 찾을 수 없습니다: {file_path}"
+                    self.logger.error(error_msg)
+                    return error_msg
+                
+                self.income_stmt_cum = pd.read_excel(file_path, header=0)
+                self.segments = extract_segment(self.income_stmt_cum)
+                print("===2. 분기별 요약손익계산서 및 사업부별 매출액 추출 완료===")
+            except Exception as e:
+                error_msg = f"분기별 요약손익계산서 처리 중 오류 발생: {str(e)}"
+                self.logger.error(error_msg)
+                return error_msg
 
             # 3. 직전분기 매출액 컨센서스 가져오기
             current_quarter_sales_consensus = self.consensus_df.loc[self.consensus_df['종목코드'] == self.state.ticker, '직전분기_매출액_컨센서스'].values[0] * (10 ** 8) #(10^8 =억원)
@@ -95,12 +106,24 @@ class ReportAgentManager:
             # 8. 사업부별 뉴스 검색
             duckduckgo_search_tool = DuckDuckGoSearchResults(max_results=1,backend="news")
             for segment in self.segments:
-                news_result = duckduckgo_search_tool.invoke(
-                    {
-                        "query": f"{self.state.company_name} {segment} 사업부 매출"
-                    }
-                )
-                self.state.segment[segment].update({"news_result":news_result})
+                max_retries = 3
+                retry_count = 0
+                while retry_count < max_retries:
+                    try:
+                        news_result = duckduckgo_search_tool.invoke(
+                            {
+                                "query": f"{self.state.company_name} {segment} 사업부 매출"
+                            }
+                        )
+                        self.state.segment[segment].update({"news_result":news_result})
+                        break  # 성공시 루프 종료
+                    except Exception as e:
+                        retry_count += 1
+                        self.logger.warning(f"{segment} 사업부 뉴스 검색 {retry_count}번째 실패: {str(e)}")
+                        if retry_count == max_retries:
+                            self.state.segment[segment].update({"news_result": []})
+                        else:
+                            time.sleep(1)
             print("===8. 사업부별 뉴스 검색 완료===")
 
             # 9. 사업부별 YOY 예측
