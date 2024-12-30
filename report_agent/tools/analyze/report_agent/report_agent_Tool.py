@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any, Type
 from langchain_core.tools import BaseTool
 from langchain_core.callbacks.manager import CallbackManagerForToolRun
-from tools.report_agent import ReportAgentManager
+from tools.analyze.report_agent.tools.report_agent import ReportAgentManager
 _REPORT_AGENT_DESCRIPTION = """report_agent(query: str) -> str:
     목표주가 계산 및 리포트 작성 에이전트, 사업부별 매출 성장률과 뉴스를 활용하여 목표주가 산정 후 목표주가 산정 프로세스 관련 리포트 작성
 """

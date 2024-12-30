@@ -1,13 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import Dict, List, Optional, Any
 from langchain_openai import ChatOpenAI
-from tools.report_agent_utils import get_ticker, extract_segment, yoy_calculator, consensusCalculator, combine_report
-from tools.yoy_prediction import yoyPrediction
-from tools.predict_next_qt import predictNextQuarter
-from tools.current_qt_review import currentQuarterReview
-from tools.find_per import find_peer_PERs_tool, find_PER_tool
-from tools.segment_yoy_prediction import segmentYoYpredictionResult
-from tools.valuation import Valuation
+from tools.analyze.report_agent.tools.report_agent_utils import get_ticker, extract_segment, yoy_calculator, consensusCalculator, combine_report
+from tools.analyze.report_agent.tools.yoy_prediction import yoyPrediction
+from tools.analyze.report_agent.tools.predict_next_qt import predictNextQuarter
+from tools.analyze.report_agent.tools.current_qt_review import currentQuarterReview
+from tools.analyze.report_agent.tools.find_per import find_peer_PERs_tool, find_PER_tool
+from tools.analyze.report_agent.tools.segment_yoy_prediction import segmentYoYpredictionResult
+from tools.analyze.report_agent.tools.valuation import Valuation
 from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_core.tools import ToolException
 import pandas as pd
@@ -44,7 +44,12 @@ class ReportAgentManager:
 
             # 1. ticker 추출
             self.state.company_name = filter["companyName"]
-            self.state.ticker = get_ticker(self.state.company_name).split(".")[0]
+            ticker = self.consensus_df.loc[self.consensus_df['종목명'] == self.state.company_name, '종목코드'].values[0]
+            if ticker is None:
+                error_msg = f"티커를 찾을 수 없습니다: {self.state.company_name}"
+                self.logger.error(error_msg)
+                return error_msg
+            self.state.ticker = ticker
 
             print(f"회사명: {self.state.company_name}")
             print(f"티커: {self.state.ticker}")

@@ -2,7 +2,7 @@ import yfinance as yf
 import numpy as np
 from langchain_core.prompts import PromptTemplate
 from langchain.output_parsers import ResponseSchema, StructuredOutputParser
-from tools.report_agent_utils import get_ticker
+from tools.analyze.report_agent.tools.report_agent_utils import get_ticker
 
 response_schemas = [
     ResponseSchema(name="answer", description="사용자의 질문에 대한 답변, 파이썬 리스트 형식이어야 함."),
